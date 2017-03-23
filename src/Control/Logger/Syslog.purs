@@ -1,5 +1,5 @@
 module Control.Logger.Syslog
-  ( Message
+  ( Message(..)
   , syslog
   ) where
 
@@ -11,19 +11,15 @@ import Syslog as Syslog
 import Syslog.Facility (Facility)
 import Syslog.Severity (Severity)
 
-type Message =
-  { severity       :: Severity
-  , structuredData :: Map String (Map String String)
-  , message        :: Maybe String
-  }
+data Message = Message Severity (Map String (Map String String)) (Maybe String)
 
 syslog
   :: ∀ f
    . (Syslog.Message -> f Unit)
   -> Facility
   -> Logger f Message
-syslog w f = Logger \m ->
-  w { priority:       Syslog.fsPriority f m.severity
-    , structuredData: m.structuredData
-    , message:        m.message
+syslog w f = Logger \(Message severity structuredData message) ->
+  w { priority:       Syslog.fsPriority f severity
+    , structuredData: structuredData
+    , message:        message
     }
