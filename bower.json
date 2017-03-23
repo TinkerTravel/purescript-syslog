@@ -6,6 +6,8 @@
     "purescript-maybe": "^2.1.1",
     "purescript-prelude": "^2.5.0",
     "purescript-aff": "^2.0.3",
-    "purescript-node-streams": "^2.0.0"
+    "purescript-node-streams": "^2.0.0",
+    "purescript-logging": "^1.0.0",
+    "purescript-tuples": "^3.2.0"
   }
 }
