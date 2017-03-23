@@ -8,6 +8,8 @@
     "purescript-aff": "^2.0.3",
     "purescript-node-streams": "^2.0.0",
     "purescript-logging": "^1.0.0",
-    "purescript-tuples": "^3.2.0"
+    "purescript-tuples": "^3.2.0",
+    "purescript-maps": "^2.1.2",
+    "purescript-strings": "^2.1.0"
   }
 }

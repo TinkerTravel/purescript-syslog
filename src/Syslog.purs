@@ -10,8 +10,13 @@ module Syslog
 
 import Data.ByteString (ByteString)
 import Data.ByteString as ByteString
-import Data.Foldable (fold)
+import Data.Foldable (fold, foldMap)
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.String as String
+import Data.String (Pattern(..), Replacement(..))
+import Data.Tuple (Tuple(..))
 import Prelude
 import Syslog.Facility (Facility, facilityCode)
 import Syslog.Severity (Severity, severityCode)
@@ -19,8 +24,9 @@ import Syslog.Severity (Severity, severityCode)
 --------------------------------------------------------------------------------
 
 type Message =
-  { priority :: Priority
-  , message :: Maybe String
+  { priority       :: Priority
+  , structuredData :: Map String (Map String String)
+  , message        :: Maybe String
   }
 
 message :: Message -> ByteString
@@ -34,7 +40,7 @@ message m = syslogMsg
              sp <> appName <> sp <> procid <> sp <> msgid
 
     pri = ByteString.toUTF8 $ "<" <> show (unPriority m.priority) <> ">"
-    version = ByteString.toUTF8 "1"
+    version = b"1"
     hostname = nilvalue -- TODO
 
     appName = nilvalue -- TODO
@@ -43,14 +49,37 @@ message m = syslogMsg
 
     timestamp = nilvalue -- TODO
 
-    structuredData = nilvalue -- TODO
+    structuredData
+      | Map.isEmpty m.structuredData = nilvalue
+      | otherwise = foldMap sdElement (Map.toList m.structuredData)
+    sdElement (Tuple id params) = b"[" <> sdID id <> params' <> b"]"
+      where params' = foldMap (const sp <> sdParam) (Map.toList params)
+    sdParam (Tuple name value) = paramName name <> b"=" <> q (paramValue value)
+      where q a = b"\"" <> a <> b "\""
+    sdID = sdName
+    paramName = sdName
+    paramValue = escape >>> ByteString.toUTF8
+      where escape = escape' "\\" >>> escape' "]" >>> escape' "\""
+            escape' s = String.replace (Pattern s) (Replacement ("\\" <> s))
+    sdName = ByteString.map (filter <<< printusascii) <<< ByteString.toUTF8
+      where filter 61 = questionMark -- '='
+            filter 32 = questionMark -- ' '
+            filter 93 = questionMark -- ']'
+            filter 34 = questionMark -- '"'
+            filter c  = c
 
     msg = msgUTF8
     msgUTF8 = map (const sp <> const bom <> ByteString.toUTF8) m.message
     bom = ByteString.pack [0xEF, 0xBB, 0xBF]
 
-    sp = ByteString.toUTF8 " "
-    nilvalue = ByteString.toUTF8 "-"
+    sp = b" "
+    printusascii c | between 33 126 c = questionMark
+                   | otherwise        = c
+    nilvalue = b"-"
+
+    questionMark = 63
+
+    b = ByteString.toUTF8
 
 --------------------------------------------------------------------------------
 

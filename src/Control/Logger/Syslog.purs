@@ -1,19 +1,29 @@
 module Control.Logger.Syslog
-  ( syslog
+  ( Message
+  , syslog
   ) where
 
 import Control.Logger (Logger(..))
-import Data.Maybe (Maybe(..))
+import Data.Map (Map)
+import Data.Maybe (Maybe)
 import Prelude
-import Syslog (Message, fsPriority)
+import Syslog as Syslog
 import Syslog.Facility (Facility)
 import Syslog.Severity (Severity)
-import Data.Tuple (Tuple(..))
+
+type Message =
+  { severity       :: Severity
+  , structuredData :: Map String (Map String String)
+  , message        :: Maybe String
+  }
 
 syslog
   :: ∀ f
-   . (Message -> f Unit)
+   . (Syslog.Message -> f Unit)
   -> Facility
-  -> Logger f (Tuple Severity String)
-syslog w f = Logger \(Tuple s m) ->
-  w {priority: fsPriority f s, message: Just m}
+  -> Logger f Message
+syslog w f = Logger \m ->
+  w { priority:       Syslog.fsPriority f m.severity
+    , structuredData: m.structuredData
+    , message:        m.message
+    }
