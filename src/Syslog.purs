@@ -73,8 +73,8 @@ message m = syslogMsg
     bom = ByteString.pack [0xEF, 0xBB, 0xBF]
 
     sp = b" "
-    printusascii c | between 33 126 c = questionMark
-                   | otherwise        = c
+    printusascii c | between 33 126 c = c
+                   | otherwise        = questionMark
     nilvalue = b"-"
 
     questionMark = 63
