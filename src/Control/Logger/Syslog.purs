@@ -4,14 +4,14 @@ module Control.Logger.Syslog
   ) where
 
 import Control.Logger (Logger(..))
-import Data.Map (Map)
 import Data.Maybe (Maybe)
+import Data.StrMap (StrMap)
 import Prelude
 import Syslog as Syslog
 import Syslog.Facility (Facility)
 import Syslog.Severity (Severity)
 
-data Message = Message Severity (Map String (Map String String)) (Maybe String)
+data Message = Message Severity (StrMap (StrMap String)) (Maybe String)
 
 syslog
   :: ∀ f

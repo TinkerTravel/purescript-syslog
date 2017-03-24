@@ -11,11 +11,11 @@ module Syslog
 import Data.ByteString (ByteString)
 import Data.ByteString as ByteString
 import Data.Foldable (fold, foldMap)
-import Data.Map (Map)
-import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
+import Data.StrMap (StrMap)
+import Data.StrMap as StrMap
 import Data.Tuple (Tuple(..))
 import Prelude
 import Syslog.Facility (Facility, facilityCode)
@@ -25,7 +25,7 @@ import Syslog.Severity (Severity, severityCode)
 
 type Message =
   { priority       :: Priority
-  , structuredData :: Map String (Map String String)
+  , structuredData :: StrMap (StrMap String)
   , message        :: Maybe String
   }
 
@@ -50,10 +50,10 @@ message m = syslogMsg
     timestamp = nilvalue -- TODO
 
     structuredData
-      | Map.isEmpty m.structuredData = nilvalue
-      | otherwise = foldMap sdElement (Map.toList m.structuredData)
+      | StrMap.isEmpty m.structuredData = nilvalue
+      | otherwise = foldMap sdElement (StrMap.toList m.structuredData)
     sdElement (Tuple id params) = b"[" <> sdID id <> params' <> b"]"
-      where params' = foldMap (const sp <> sdParam) (Map.toList params)
+      where params' = foldMap (const sp <> sdParam) (StrMap.toList params)
     sdParam (Tuple name value) = paramName name <> b"=" <> q (paramValue value)
       where q a = b"\"" <> a <> b "\""
     sdID = sdName
